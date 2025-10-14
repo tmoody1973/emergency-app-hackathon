@@ -251,7 +251,7 @@ export default function DashboardPage() {
                   <div className="mb-4">
                     <p className="text-xs text-gray-500 uppercase font-medium mb-2">Needs</p>
                     <div className="flex flex-wrap gap-2">
-                      {emergency.specific_needs.map((need, index) => (
+                      {emergency.specific_needs.map((need: string, index: number) => (
                         <span key={index} className="inline-block px-2.5 py-0.5 rounded-full bg-[#3B82F6]/10 text-[#3B82F6] border border-[#3B82F6]/20 text-xs font-medium capitalize">
                           {need}
                         </span>
