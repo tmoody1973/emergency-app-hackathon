@@ -74,11 +74,8 @@ function calculateVolunteerScore(
   else if (volunteer.availability === 'today') score += 7;
   else if (volunteer.availability === 'this_week') score += 5;
 
-  // Capacity (5 points max)
-  if (volunteer.max_concurrent_missions && volunteer.current_missions !== null) {
-    const capacityLeft = volunteer.max_concurrent_missions - volunteer.current_missions;
-    if (capacityLeft > 0) score += 5;
-  }
+  // Active volunteer bonus (5 points)
+  if (volunteer.is_active) score += 5;
 
   // Special needs matching (5 points max)
   if (emergency.has_children && skills.childcare) score += 3;
@@ -112,27 +109,20 @@ function calculateBusinessScore(
     else if (distance <= 100) score += 10;
   }
 
-  // Services matching (40 points max)
-  const services = business.services_offered as Record<string, boolean>;
+  // Resources matching (40 points max)
+  const resources = business.resources as Record<string, any>;
   const needs = emergency.specific_needs || [];
 
-  if (needs.includes('shelter') && services.shelter) score += 40;
-  if (needs.includes('food') && services.food) score += 35;
-  if (needs.includes('medical') && services.medical) score += 40;
-  if (needs.includes('transportation') && services.transportation) score += 30;
-  if (needs.includes('clothing') && services.clothing) score += 25;
-  if (needs.includes('financial') && services.financial_aid) score += 30;
-
-  // Capacity (10 points max)
-  if (business.capacity && business.current_load !== null) {
-    const capacityLeft = business.capacity - business.current_load;
-    const capacityPercentage = capacityLeft / business.capacity;
-    score += Math.floor(capacityPercentage * 10);
+  if (resources && typeof resources === 'object') {
+    if (needs.includes('shelter') && resources.hotel_rooms) score += 40;
+    if (needs.includes('food') && (resources.meals_per_day || resources.food_boxes)) score += 35;
+    if (needs.includes('medical') && (resources.medical_consultations || resources.medical_supplies)) score += 40;
+    if (needs.includes('transportation') && resources.vehicles) score += 30;
+    if (needs.includes('supplies') && resources.water_cases) score += 25;
   }
 
-  // Urgency matching (10 points max)
-  if (emergency.urgency === 'critical' && business.can_handle_critical) score += 10;
-  else if (emergency.urgency === 'high') score += 7;
+  // Auto-match enabled bonus (10 points)
+  if (business.auto_match) score += 10;
 
   return score;
 }
@@ -161,8 +151,7 @@ export async function findMatches(emergencyId: string): Promise<{
   const { data: volunteers, error: volunteersError } = await supabase
     .from('volunteers')
     .select('*')
-    .eq('status', 'available')
-    .gte('availability', 'this_week'); // Only get volunteers available this week or sooner
+    .eq('is_active', true);
 
   if (volunteersError) {
     throw new Error('Failed to fetch volunteers');
@@ -172,7 +161,7 @@ export async function findMatches(emergencyId: string): Promise<{
   const { data: businesses, error: businessesError } = await supabase
     .from('businesses')
     .select('*')
-    .eq('status', 'available');
+    .eq('auto_match', true);
 
   if (businessesError) {
     throw new Error('Failed to fetch businesses');
@@ -267,21 +256,8 @@ export async function createMatch(
     throw new Error('Failed to create match');
   }
 
-  // Update volunteer status if matched
-  if (volunteerId) {
-    await supabase
-      .from('volunteers')
-      .update({ status: 'busy' })
-      .eq('id', volunteerId);
-  }
-
-  // Update business status if matched
-  if (businessId) {
-    await supabase
-      .from('businesses')
-      .update({ status: 'busy' })
-      .eq('id', businessId);
-  }
+  // Note: Volunteer and Business status tracking removed as these fields don't exist in schema
+  // Future enhancement: Add status tracking to database schema if needed
 
   // Update emergency status
   await supabase
