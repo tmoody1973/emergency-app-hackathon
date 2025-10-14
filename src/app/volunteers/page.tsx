@@ -42,7 +42,8 @@ export default function VolunteersPage() {
     return matchesSearch && matchesAvailability;
   });
 
-  const getAvailabilityColor = (availability: string) => {
+  const getAvailabilityColor = (availability: string | null) => {
+    if (!availability) return 'bg-gray-100 text-gray-800 border-gray-200';
     switch (availability) {
       case 'immediate':
       case 'available_now':
@@ -60,7 +61,8 @@ export default function VolunteersPage() {
     }
   };
 
-  const formatAvailability = (availability: string) => {
+  const formatAvailability = (availability: string | null) => {
+    if (!availability) return 'Not specified';
     return availability.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
