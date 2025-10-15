@@ -449,6 +449,8 @@ INSERT INTO emergencies (
   specific_needs,
   status
 ) VALUES
+  -- NOTE: Status must be 'open', 'matched', 'in_progress', 'resolved', or 'closed'
+  -- Using 'open' for all new emergencies awaiting help
   -- Critical urgency
   (
     'flood',
@@ -465,7 +467,7 @@ INSERT INTO emergencies (
     false,
     false,
     '["shelter", "food", "clothing", "transportation"]',
-    'pending'
+    'open'
   ),
   (
     'fire',
@@ -482,7 +484,7 @@ INSERT INTO emergencies (
     true,
     true,
     '["shelter", "clothing", "food", "medical", "financial"]',
-    'pending'
+    'open'
   ),
   (
     'medical',
@@ -499,7 +501,7 @@ INSERT INTO emergencies (
     false,
     false,
     '["medical", "financial", "food"]',
-    'pending'
+    'open'
   ),
 
   -- High urgency
@@ -518,7 +520,7 @@ INSERT INTO emergencies (
     false,
     false,
     '["repairs", "cleanup", "supplies"]',
-    'pending'
+    'open'
   ),
   (
     'layoff',
@@ -535,7 +537,7 @@ INSERT INTO emergencies (
     false,
     false,
     '["food", "transportation", "financial"]',
-    'pending'
+    'open'
   ),
   (
     'medical',
@@ -552,7 +554,7 @@ INSERT INTO emergencies (
     true,
     true,
     '["medical", "food", "transportation"]',
-    'pending'
+    'open'
   ),
   (
     'hurricane',
@@ -569,7 +571,7 @@ INSERT INTO emergencies (
     true,
     false,
     '["repairs", "financial", "supplies"]',
-    'pending'
+    'open'
   ),
 
   -- Medium urgency
@@ -588,7 +590,7 @@ INSERT INTO emergencies (
     false,
     false,
     '["food", "financial", "clothing"]',
-    'pending'
+    'open'
   ),
   (
     'flood',
@@ -605,7 +607,7 @@ INSERT INTO emergencies (
     false,
     false,
     '["cleanup", "supplies"]',
-    'pending'
+    'open'
   ),
   (
     'other',
@@ -622,7 +624,7 @@ INSERT INTO emergencies (
     false,
     false,
     '["transportation", "repairs"]',
-    'pending'
+    'open'
   ),
   (
     'medical',
@@ -639,7 +641,7 @@ INSERT INTO emergencies (
     false,
     false,
     '["medical", "supplies", "childcare"]',
-    'pending'
+    'open'
   ),
   (
     'layoff',
@@ -656,7 +658,7 @@ INSERT INTO emergencies (
     false,
     false,
     '["financial", "clothing", "other"]',
-    'pending'
+    'open'
   ),
 
   -- Low urgency
@@ -675,7 +677,7 @@ INSERT INTO emergencies (
     true,
     false,
     '["companionship", "transportation", "supplies"]',
-    'pending'
+    'open'
   ),
   (
     'other',
@@ -692,7 +694,7 @@ INSERT INTO emergencies (
     false,
     false,
     '["information", "childcare"]',
-    'pending'
+    'open'
   ),
   (
     'other',
@@ -709,7 +711,7 @@ INSERT INTO emergencies (
     false,
     false,
     '["volunteers", "cleanup"]',
-    'pending'
+    'open'
   );
 
 -- ========================================
