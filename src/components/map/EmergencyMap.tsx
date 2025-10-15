@@ -1,17 +1,20 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
 // Fix for default marker icons in Next.js
 // This is necessary because Webpack doesn't handle Leaflet's default icon paths correctly
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+if (typeof window !== 'undefined') {
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  });
+}
 
 interface EmergencyMapData {
   id: string;
@@ -39,10 +42,29 @@ export default function EmergencyMap({
   zoom = 12,
   height = '500px',
 }: EmergencyMapProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Ensure component only renders on client side
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Filter out emergencies without coordinates
   const mappableEmergencies = emergencies.filter(
     (e) => e.location_lat !== null && e.location_lng !== null
   );
+
+  // Don't render map until client-side
+  if (!isMounted) {
+    return (
+      <div
+        className="flex items-center justify-center bg-gray-100 animate-pulse rounded-lg"
+        style={{ height }}
+      >
+        <p className="text-gray-500">Loading map...</p>
+      </div>
+    );
+  }
 
   // Create custom colored marker icons based on urgency
   const createCustomIcon = (urgency: string) => {
