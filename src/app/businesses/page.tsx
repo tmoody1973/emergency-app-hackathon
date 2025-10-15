@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import type { Business } from '@/types';
+import DashboardHeader from '@/components/layout/DashboardHeader';
 
 export default function BusinessesPage() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -96,27 +96,7 @@ export default function BusinessesPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      {/* Header */}
-      <header className="border-b border-border bg-white">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500">
-                <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-              <h1 className="text-xl font-bold text-gray-900">Business Partners</h1>
-            </div>
-            <Link
-              href="/"
-              className="rounded-lg bg-transparent border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              ← Back to Home
-            </Link>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-7xl">

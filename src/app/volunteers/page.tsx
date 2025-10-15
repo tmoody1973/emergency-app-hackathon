@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import type { Volunteer } from '@/types';
+import DashboardHeader from '@/components/layout/DashboardHeader';
 
 export default function VolunteersPage() {
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
@@ -68,27 +68,7 @@ export default function VolunteersPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      {/* Header */}
-      <header className="border-b border-border bg-white">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500">
-                <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <h1 className="text-xl font-bold text-gray-900">Volunteer Directory</h1>
-            </div>
-            <Link
-              href="/"
-              className="rounded-lg bg-transparent border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              ← Back to Home
-            </Link>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-7xl">

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 import type { Emergency, Match } from '@/types';
+import DashboardHeader from '@/components/layout/DashboardHeader';
 
 // Import map dynamically to avoid SSR issues with Leaflet
 const EmergencyMap = dynamic(() => import('@/components/map/EmergencyMap'), {
@@ -101,52 +102,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      {/* Header */}
-      <header className="border-b border-border bg-white">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#3B82F6]">
-                  <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-                  </svg>
-                </div>
-                <h1 className="text-xl font-bold text-gray-900">Emergency Dashboard</h1>
-              </div>
-
-              {/* Navigation Links */}
-              <nav className="hidden md:flex items-center gap-4">
-                <a
-                  href="/volunteers"
-                  className="text-sm font-medium text-gray-700 hover:text-[#3B82F6] transition-colors flex items-center gap-1"
-                >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  Volunteers
-                </a>
-                <a
-                  href="/businesses"
-                  className="text-sm font-medium text-gray-700 hover:text-[#3B82F6] transition-colors flex items-center gap-1"
-                >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                  Businesses
-                </a>
-              </nav>
-            </div>
-
-            <a
-              href="/intake"
-              className="rounded-lg bg-[#3B82F6] px-6 py-2 text-sm font-semibold text-white hover:bg-[#2563EB] transition-colors"
-            >
-              + New Emergency
-            </a>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-7xl">
@@ -275,6 +231,45 @@ export default function DashboardPage() {
                     <p className="text-sm text-gray-600">{emergency.description}</p>
                   </div>
                 </div>
+
+                {/* Contact Information */}
+                {(emergency.requester_name || emergency.requester_phone || emergency.requester_email) && (
+                  <div className="mb-4 pb-4 border-b border-gray-200">
+                    <p className="text-xs text-gray-500 uppercase font-medium mb-3">Contact Information</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {emergency.requester_name && (
+                        <div className="flex items-center gap-2">
+                          <svg className="h-4 w-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          <span className="text-sm text-gray-900 font-medium">{emergency.requester_name}</span>
+                        </div>
+                      )}
+
+                      {emergency.requester_phone && (
+                        <div className="flex items-center gap-2">
+                          <svg className="h-4 w-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                          <a href={`tel:${emergency.requester_phone}`} className="text-sm text-[#3B82F6] hover:underline">
+                            {emergency.requester_phone}
+                          </a>
+                        </div>
+                      )}
+
+                      {emergency.requester_email && (
+                        <div className="flex items-center gap-2">
+                          <svg className="h-4 w-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                          <a href={`mailto:${emergency.requester_email}`} className="text-sm text-[#3B82F6] hover:underline truncate">
+                            {emergency.requester_email}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   {/* Location */}
