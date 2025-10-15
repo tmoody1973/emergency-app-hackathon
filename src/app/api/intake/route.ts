@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractEmergencyData, generateAIResponse } from '@/lib/gemini';
 import { getServerSupabaseClient } from '@/lib/supabase';
 import { geocodeAddress } from '@/lib/geocoding';
+import { checkRateLimit, createSession, updateSession, getSession } from '@/lib/rateLimiter';
 import type { ChatMessage, EmergencyIntakeData } from '@/types';
 
 export const runtime = 'nodejs';
@@ -10,22 +11,134 @@ export const dynamic = 'force-dynamic';
 interface IntakeRequestBody {
   messages: ChatMessage[];
   sessionId?: string;
+  captchaToken?: string;
+}
+
+/**
+ * Get client IP address from request headers
+ */
+function getClientIP(request: NextRequest): string {
+  // Try various headers in order of reliability
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+
+  const realIP = request.headers.get('x-real-ip');
+  if (realIP) {
+    return realIP;
+  }
+
+  // Fallback to a placeholder (in local dev, this might be empty)
+  return 'unknown';
+}
+
+/**
+ * Verify reCAPTCHA token with Google
+ */
+async function verifyRecaptcha(token: string): Promise<boolean> {
+  try {
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+    if (!secretKey) {
+      console.warn('RECAPTCHA_SECRET_KEY not configured, skipping verification');
+      return true; // Allow in development if not configured
+    }
+
+    const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `secret=${secretKey}&response=${token}`,
+    });
+
+    const data = await response.json();
+    return data.success === true;
+  } catch (error) {
+    console.error('reCAPTCHA verification error:', error);
+    return false;
+  }
 }
 
 /**
  * POST /api/intake
  * Process conversational emergency intake using Gemini AI
+ * Includes rate limiting and bot protection
  */
 export async function POST(request: NextRequest) {
   try {
     const body: IntakeRequestBody = await request.json();
-    const { messages, sessionId } = body;
+    const { messages, sessionId, captchaToken } = body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json(
         { error: 'Messages array is required' },
         { status: 400 }
       );
+    }
+
+    // PHASE 1: Rate Limiting Protection
+    const clientIP = getClientIP(request);
+    console.log('Request from IP:', clientIP);
+
+    // Check rate limit
+    const rateLimitCheck = checkRateLimit(clientIP);
+    if (!rateLimitCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded',
+          message: rateLimitCheck.reason,
+          retryAfter: rateLimitCheck.retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': rateLimitCheck.retryAfter?.toString() || '3600',
+          },
+        }
+      );
+    }
+
+    // Apply progressive delay if needed
+    if (rateLimitCheck.delayMs && rateLimitCheck.delayMs > 0) {
+      console.log(`Applying ${rateLimitCheck.delayMs}ms delay for IP ${clientIP}`);
+      await new Promise((resolve) => setTimeout(resolve, rateLimitCheck.delayMs));
+    }
+
+    // Session management
+    if (sessionId) {
+      const existingSession = getSession(sessionId);
+      if (!existingSession) {
+        // Create new session
+        const sessionResult = createSession(clientIP, sessionId);
+        if (!sessionResult.allowed) {
+          return NextResponse.json(
+            {
+              error: 'Too many active sessions',
+              message: sessionResult.reason,
+            },
+            { status: 429 }
+          );
+        }
+      } else {
+        // Update existing session activity
+        updateSession(sessionId);
+      }
+    }
+
+    // PHASE 2: CAPTCHA Verification (if token provided)
+    if (captchaToken) {
+      const captchaValid = await verifyRecaptcha(captchaToken);
+      if (!captchaValid) {
+        return NextResponse.json(
+          {
+            error: 'CAPTCHA verification failed',
+            message: 'Please complete the verification again',
+          },
+          { status: 403 }
+        );
+      }
+      console.log('CAPTCHA verified successfully');
     }
 
     // Extract emergency data from conversation using Gemini AI

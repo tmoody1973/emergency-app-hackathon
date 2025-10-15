@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import ReCAPTCHA from 'react-google-recaptcha';
 import ChatInterface from '@/components/chat/ChatInterface';
 import type { ChatMessage, EmergencyIntakeData } from '@/types';
 
@@ -19,7 +20,38 @@ export default function IntakePage() {
   const [emergencyId, setEmergencyId] = useState<string | null>(null);
   const [isComplete, setIsComplete] = useState(false);
 
+  // Anti-abuse protection
+  const [honeypot, setHoneypot] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [showCaptcha, setShowCaptcha] = useState(false);
+  const [messageCount, setMessageCount] = useState(0);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+
+  // Show CAPTCHA after 3 messages or if rate limit hit
+  useEffect(() => {
+    if (messageCount >= 3 && !captchaToken) {
+      setShowCaptcha(true);
+    }
+  }, [messageCount, captchaToken]);
+
   const handleSendMessage = async (message: string) => {
+    // Honeypot check - if filled, it's a bot
+    if (honeypot !== '') {
+      console.warn('Bot detected via honeypot');
+      return;
+    }
+
+    // CAPTCHA check if required
+    if (showCaptcha && !captchaToken) {
+      const errorMessage: ChatMessage = {
+        role: 'assistant',
+        content: 'Please complete the verification below to continue.',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      return;
+    }
+
     // Add user message
     const userMessage: ChatMessage = {
       role: 'user',
@@ -28,6 +60,7 @@ export default function IntakePage() {
     };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
+    setMessageCount((prev) => prev + 1);
 
     // Call intake API
     setIsLoading(true);
@@ -40,6 +73,7 @@ export default function IntakePage() {
         body: JSON.stringify({
           messages: updatedMessages,
           sessionId,
+          captchaToken: captchaToken || undefined,
         }),
       });
 
@@ -185,6 +219,39 @@ export default function IntakePage() {
                 extractedData={extractedData}
               />
             </div>
+
+            {/* Honeypot field - invisible to humans, visible to bots */}
+            <input
+              type="text"
+              name="website"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px' }}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+            />
+
+            {/* reCAPTCHA - shown when needed */}
+            {showCaptcha && (
+              <div className="mt-4 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <svg className="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900">Security Verification Required</h3>
+                    <p className="text-xs text-gray-600">Please complete this quick verification to continue</p>
+                  </div>
+                </div>
+                <ReCAPTCHA
+                  ref={recaptchaRef}
+                  sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''}
+                  onChange={(token) => setCaptchaToken(token)}
+                  onExpired={() => setCaptchaToken(null)}
+                />
+              </div>
+            )}
           </div>
 
           {/* Right Sidebar - Extracted Info */}
