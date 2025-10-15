@@ -1,8 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 import type { Emergency, Match } from '@/types';
+
+// Import map dynamically to avoid SSR issues with Leaflet
+const EmergencyMap = dynamic(() => import('@/components/map/EmergencyMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[500px] bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">
+      <p className="text-gray-500">Loading map...</p>
+    </div>
+  ),
+});
 
 export default function DashboardPage() {
   const [emergencies, setEmergencies] = useState<Emergency[]>([]);
@@ -112,6 +123,35 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Map Section */}
+        {!isLoading && emergencies.length > 0 && (
+          <div className="mb-8">
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Emergency Locations</h2>
+              <p className="text-sm text-gray-600">
+                Showing {emergencies.filter((e) => e.location_lat && e.location_lng).length} of {emergencies.length} emergencies on the map
+              </p>
+            </div>
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+              <EmergencyMap
+                emergencies={emergencies.map((e) => ({
+                  id: e.id,
+                  location_lat: e.location_lat || 0,
+                  location_lng: e.location_lng || 0,
+                  emergency_type: e.emergency_type,
+                  urgency: e.urgency,
+                  description: e.description,
+                  location_address: e.location_address,
+                  requester_name: e.requester_name,
+                  status: e.status,
+                  created_at: e.created_at,
+                }))}
+                height="500px"
+              />
+            </div>
+          </div>
+        )}
+
         {/* Filters */}
         <div className="mb-6 flex gap-2">
           <button

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractEmergencyData, generateAIResponse } from '@/lib/gemini';
 import { getServerSupabaseClient } from '@/lib/supabase';
+import { geocodeAddress } from '@/lib/geocoding';
 import type { ChatMessage, EmergencyIntakeData } from '@/types';
 
 export const runtime = 'nodejs';
@@ -46,6 +47,24 @@ export async function POST(request: NextRequest) {
       try {
         const supabase = getServerSupabaseClient();
 
+        // Geocode the address to get lat/lng coordinates
+        const fullAddress = extractedData.location_address || extractedData.location_city || '';
+        let locationLat: number | null = null;
+        let locationLng: number | null = null;
+
+        if (fullAddress) {
+          console.log('Geocoding address:', fullAddress);
+          const geocodeResult = await geocodeAddress(fullAddress);
+
+          if (geocodeResult) {
+            locationLat = geocodeResult.lat;
+            locationLng = geocodeResult.lng;
+            console.log('Geocoding successful:', { lat: locationLat, lng: locationLng });
+          } else {
+            console.warn('Geocoding failed for address:', fullAddress);
+          }
+        }
+
         // Insert emergency record
         const { data: emergency, error: insertError } = await supabase
           .from('emergencies')
@@ -53,9 +72,9 @@ export async function POST(request: NextRequest) {
             emergency_type: extractedData.emergency_type,
             urgency: extractedData.urgency,
             description: extractedData.additional_context || '',
-            location_address: extractedData.location_address || extractedData.location_city,
-            location_lat: null, // TODO: Geocode address to get lat/lng
-            location_lng: null,
+            location_address: fullAddress,
+            location_lat: locationLat,
+            location_lng: locationLng,
             requester_name: extractedData.requester_name,
             requester_phone: extractedData.requester_phone,
             requester_email: extractedData.requester_email || null,

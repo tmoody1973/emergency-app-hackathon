@@ -10,3 +10,18 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Leaflet map styles - ensure proper z-index */
+.leaflet-container {
+  z-index: 0;
+}
+
+/* Fix for Leaflet popups appearing behind other elements */
+.leaflet-popup-pane {
+  z-index: 700;
+}
+
+/* Ensure map controls (zoom buttons) are visible */
+.leaflet-control-zoom {
+  z-index: 1000;
+}
