@@ -12,6 +12,10 @@ export interface Emergency {
   specific_needs: Record<string, any> | null;
   status: 'open' | 'matched' | 'in_progress' | 'resolved' | 'closed';
   requester_contact: string | null;
+  requester_name: string | null;
+  requester_phone: string | null;
+  requester_email: string | null;
+  session_id: string | null;
   ai_extracted_data: Record<string, any> | null;
   has_children: boolean;
   has_elderly: boolean;
@@ -82,6 +86,9 @@ export interface EmergencyIntakeData {
   location_address: string;
   location_city?: string;
   location_state?: string;
+  requester_name?: string;
+  requester_phone?: string;
+  requester_email?: string;
   people_affected: number;
   has_children: boolean;
   has_elderly: boolean;

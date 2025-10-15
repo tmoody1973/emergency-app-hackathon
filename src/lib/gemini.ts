@@ -19,6 +19,9 @@ Extract the following information:
 - location_address: full address if provided
 - location_city: city name
 - location_state: state abbreviation
+- requester_name: person's full name
+- requester_phone: contact phone number (with area code)
+- requester_email: email address (optional)
 - people_affected: number of people
 - has_children: boolean (true if children are mentioned)
 - has_elderly: boolean (true if elderly/seniors are mentioned)
@@ -35,10 +38,13 @@ CRITICAL RULES:
 2. Be empathetic but concise in follow-up questions
 3. If location is vague, ask for specific address or cross-streets
 4. If urgency is unclear, ask about immediacy of danger
-5. Mark is_complete as true only when you have: emergency_type, location (city minimum), urgency, and at least one specific_need
+5. Mark is_complete as true only when you have: emergency_type, location (city minimum), urgency, at least one specific_need, requester_name, and requester_phone
 6. Keep follow_up_question to ONE question at a time
 7. If someone mentions a specific number of people, set people_affected
 8. Infer urgency from context (e.g., "house is flooding NOW" = critical, "lost job last week" = medium)
+9. ALWAYS ask for name and phone number early in conversation - these are required for helpers to contact them
+10. Phone number should include area code (e.g., "(555) 123-4567" or "555-123-4567")
+11. Email is optional but helpful as backup contact
 
 Example responses:
 
@@ -49,6 +55,9 @@ User: "My house is flooding and we need help!"
   "location_address": "",
   "location_city": "",
   "location_state": "",
+  "requester_name": "",
+  "requester_phone": "",
+  "requester_email": "",
   "people_affected": 0,
   "has_children": false,
   "has_elderly": false,
@@ -56,18 +65,43 @@ User: "My house is flooding and we need help!"
   "specific_needs": ["shelter"],
   "additional_context": "house flooding, immediate danger",
   "confidence": "low",
-  "missing_info": ["location", "people_affected"],
-  "follow_up_question": "Where are you located? Please provide your address or nearest cross-streets.",
+  "missing_info": ["location", "contact_info"],
+  "follow_up_question": "I'm sorry you're going through this. What's your name and phone number so we can get help to you quickly?",
   "is_complete": false
 }
 
-User: "I'm at 123 Oak Street in Springfield, family of 4 including 2 kids"
+User: "I'm John Smith, my number is 555-123-4567"
+{
+  "emergency_type": "flood",
+  "urgency": "critical",
+  "location_address": "",
+  "location_city": "",
+  "location_state": "",
+  "requester_name": "John Smith",
+  "requester_phone": "555-123-4567",
+  "requester_email": "",
+  "people_affected": 0,
+  "has_children": false,
+  "has_elderly": false,
+  "has_disabilities": false,
+  "specific_needs": ["shelter"],
+  "additional_context": "house flooding, immediate danger",
+  "confidence": "medium",
+  "missing_info": ["location"],
+  "follow_up_question": "Thank you John. Where are you located? Please provide your address.",
+  "is_complete": false
+}
+
+User: "123 Oak Street in Springfield, family of 4 including 2 kids"
 {
   "emergency_type": "flood",
   "urgency": "critical",
   "location_address": "123 Oak Street",
   "location_city": "Springfield",
   "location_state": "",
+  "requester_name": "John Smith",
+  "requester_phone": "555-123-4567",
+  "requester_email": "",
   "people_affected": 4,
   "has_children": true,
   "has_elderly": false,

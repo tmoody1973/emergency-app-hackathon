@@ -39,7 +39,9 @@ export async function POST(request: NextRequest) {
     if (
       extractedData.is_complete &&
       extractedData.confidence !== 'low' &&
-      extractedData.location_city
+      extractedData.location_city &&
+      extractedData.requester_name &&
+      extractedData.requester_phone
     ) {
       try {
         const supabase = getServerSupabaseClient();
@@ -54,6 +56,9 @@ export async function POST(request: NextRequest) {
             location_address: extractedData.location_address || extractedData.location_city,
             location_lat: null, // TODO: Geocode address to get lat/lng
             location_lng: null,
+            requester_name: extractedData.requester_name,
+            requester_phone: extractedData.requester_phone,
+            requester_email: extractedData.requester_email || null,
             people_affected: extractedData.people_affected || null,
             has_children: extractedData.has_children,
             has_elderly: extractedData.has_elderly,
